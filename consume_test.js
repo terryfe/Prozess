@@ -1,21 +1,26 @@
 var Consumer = require('./lib/Consumer');
 
-var options = {host : '10.75.15.235', topic : 'test', partition : 0};
-options = {host : 'localhost', topic : 'social', partition : 0, offset : 0};
+
+options = {host : '10.75.15.234', topic : 'topic', partition : 0, offset : 0};
 var consumer = new Consumer(options);
 consumer.connect(function(err){
   if (err){
+    console.log("Error: " + err);
     throw "could not connect to Kafka";
   }
   console.log("connected!!");
-  setInterval(function(){
-    console.log("===================================================================");
-    console.log(new Date());
-    console.log("consuming: " + consumer.topic);
-    consumer.consume(function(err, messages){
-      console.log(err, messages);
+
+  console.log("===================================================================");
+  console.log(new Date());
+  console.log("consuming: " + consumer.topic);
+  consumer.on('message', function(messages){
+    messages.forEach(function(m){
+      console.log(m);
     });
-  }, 7000);
+    setTimeout(consumer.consume(),2000);
+  });
+  consumer.consume();
+    
 });
 
 
