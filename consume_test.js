@@ -15,7 +15,7 @@ consumer.connect(function(err){
   console.log("consuming: " + consumer.topic);
   consumer.on('message', function(messages){
     messages.forEach(function(m){
-      console.log(m);
+      console.log(m.payload.toString());
     });
     setTimeout(consumer.consume(),2000);
   });
