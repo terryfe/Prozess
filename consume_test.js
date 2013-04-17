@@ -1,7 +1,7 @@
 var Consumer = require('./lib/Consumer');
 
 
-options = {host : '10.75.15.235', topic : 'topic', partition : 0, offset : 0};
+options = {host : 'test.kafka.rome.cluster.sina.com.cn', topic : 'topic', partition : 0, offset : 0};
 var consumer = new Consumer(options);
 consumer.connect(function(err){
   if (err){
