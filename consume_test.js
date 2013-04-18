@@ -15,12 +15,15 @@ consumer.connect(function(err){
     messages.forEach(function(m){
       console.log(m.payload.toString());
     });
-    setTimeout(consumer.consume(),2000);
+    setTimeout(consumer.consume.bind(consumer),2000);
   });
   consumer.on('error', function(error){
     console.log(error);
   });
 
+  consumer.on('again', function(){
+    setTimeout(consumer.consume.bind(consumer),2000);
+  });
   consumer.consume();
     
 });
