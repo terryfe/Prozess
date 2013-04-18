@@ -1,15 +1,19 @@
 var Producer = require('./lib/Producer');
 
-var producer = new Producer('test', {host : '10.75.15.235', 'requireAcks': 1});
-producer.connect()
-producer.on('error', function(err){
+var producer = new Producer('topic', {host : 'test.kafka.rome.cluster.sina.com.cn', 'requireAcks': 1});
+
+producer.on('error', function(err,res){
   console.log("error: ", err);
+  console.log("res: ", JSON.stringify(res));
 });
 
-console.log("producing for ", producer.topic);
-console.log("sending...");
-producer.send(['123','456','789'], function(err, res){
-  console.log("Error: ", err);
-  console.log("Response: ", JSON.stringify(res));
-  producer.connection.end();
+
+producer.on('connect', function(){
+	producer.send(['123','456','789']);
 });
+
+producer.on('sent', function(error, res){
+	console.log(JSON.stringify(res));
+});
+
+producer.connect();
