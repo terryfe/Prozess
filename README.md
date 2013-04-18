@@ -5,6 +5,9 @@ Status](https://secure.travis-ci.org/cainus/Prozess.png?branch=master)](http://t
 [![Coverage Status](https://coveralls.io/repos/cainus/Prozess/badge.png?branch=master)](https://coveralls.io/r/cainus/Prozess)
 
 Prozess is a Kafka library for node.js
+This fork is wrote for Kafka version  0.8, still working on progress.
+
+v0.8's protocol changes a log, so this client's APIs has changed against old version forked from cainus's repo, see examples below:
 
 [Kafka](http://incubator.apache.org/kafka/index.html) is a persistent, efficient, distributed publish/subscribe messaging system.
 
@@ -13,49 +16,58 @@ There are two low-level clients: The Producer and the Consumer:
 ##Producer example:
 
 ```javascript
-var Producer = require('Prozess').Producer;
+var Producer = require('./lib/Producer');
 
-var producer = new Producer('social', {host : 'localhost'});
+var producer = new Producer('topic', {host : 'test.kafka.rome.cluster.sina.com.cn', 'requireAcks': 1});
+
+producer.on('error', function(err,res){
+  console.log("error: ", err);
+  console.log("res: ", JSON.stringify(res));
+});
+
+
+producer.on('connect', function(){
+  producer.send(['123','456','789']);
+});
+
+producer.on('sent', function(error, res){
+  console.log(JSON.stringify(res));
+});
+
 producer.connect();
-console.log("producing for ", producer.topic);
-producer.on('error', function(err){
-  console.log("some general error occurred: ", err);  
-});
-producer.on('brokerReconnectError', function(err){
-  console.log("could not reconnect: ", err);  
-  console.log("will retry on next send()");  
-});
-
-setInterval(function(){
-  var message = { "thisisa" :  "test " + new Date()};
-  producer.send(JSON.stringify(message), function(err){
-    if (err){
-      console.log("send error: ", err);
-    } else {
-      console.log("message sent");
-    }
-  });
-}, 1000);
 ```
 
 ##Consumer example:
 
 ```javascript
-var Consumer = require('Prozess').Consumer;
+var Consumer = require('./lib/Consumer');
 
-var options = {host : 'localhost', topic : 'social', partition : 0, offset : 0};
+
+options = {host : 'test.kafka.rome.cluster.sina.com.cn', topic : 'topic', partition : 0, offset : 0};
 var consumer = new Consumer(options);
 consumer.connect(function(err){
-  if (err) {  throw err; }
-  console.log("connected!!");
-  setInterval(function(){
-    console.log("===================================================================");
-    console.log(new Date());
-    console.log("consuming: " + consumer.topic);
-    consumer.consume(function(err, messages){
-      console.log(err, messages);
+  if (err){
+    console.log("Error: " + err);
+    throw "could not connect to Kafka";
+  }
+  console.log("connected!!");  
+  console.log("consuming: " + consumer.topic);
+  
+  consumer.on('message', function(messages){
+    messages.forEach(function(m){
+      console.log(m.payload.toString());
     });
-  }, 7000);
+    setTimeout(consumer.consume.bind(consumer),2000);
+  });
+  consumer.on('error', function(error){
+    console.log(error);
+  });
+
+  consumer.on('again', function(){
+    setTimeout(consumer.consume.bind(consumer),2000);
+  });
+  consumer.consume();
+    
 });
 
 ```
@@ -70,8 +82,6 @@ var options = {
   host: 'localhost',
   port: 9092,
   offset: null, // Number, String or BigNum
-  maxMessageSize: Consumer.MAX_MESSAGE_SIZE,
-  polling: Consumer.DEFAULT_POLLING_INTERVAL
 };
 ```
 
@@ -88,6 +98,9 @@ var options = {
 ##Kafka Compatability matrix:
 
 <table>
+  <tr>
+    <td>Kafka 0.8 from git</td><td>Partial Supported</td>
+  <tr>
   <tr>
     <td>Kafka 0.7.2 Release</td><td>Supported</td>
   <tr>
